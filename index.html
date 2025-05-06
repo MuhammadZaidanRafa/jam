@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jam Tangan Digital + Alarm + Stopwatch</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #1f4037, #99f2c8);
+      color: #fff;
+      text-align: center;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #fff;
+      text-transform: uppercase;
+      text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+    }
+
+    .clock, .stopwatch {
+      background-color: #000;
+      border-radius: 20px;
+      padding: 20px 40px;
+      margin: 10px 0;
+      font-size: 3em;
+      display: inline-block;
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      animation: pulse 2s infinite;
+    }
+
+    .stopwatch-controls {
+      margin-top: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 1em;
+      border: none;
+      border-radius: 10px;
+      margin: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .blinking {
+      animation: blink 1s step-start infinite;
+      color: yellow;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .clock, .stopwatch {
+        font-size: 2.5em;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <h1>Rafa</h1> <!-- Nama Merek Rafa di atas jam -->
+
+  <!-- Jam Digital -->
+  <div class="clock" id="clock">00:00:00</div>
+
+  <!-- Alarm -->
+  <div class="alarm-set">
+    <label for="alarmTime">Setel Alarm:</label><br>
+    <input type="time" id="alarmTime">
+    <button onclick="setAlarm()">Set Alarm</button>
+    <button onclick="clearAlarm()">Batal</button>
+  </div>
+
+  <audio id="alarmSound" src="https://www.soundjay.com/buttons/sounds/beep-07.mp3" preload="auto"></audio>
+
+  <!-- Stopwatch -->
+  <div class="stopwatch">
+    <div id="stopwatchDisplay">00:00</div>
+    <div class="stopwatch-controls">
+      <button id="startStopBtn" onclick="toggleStopwatch()">Mulai</button>
+      <button onclick="resetStopwatch()">Reset</button>
+    </div>
+  </div>
+
+  <script>
+    const clock = document.getElementById("clock");
+    const alarmSound = document.getElementById("alarmSound");
+    const stopwatchDisplay = document.getElementById("stopwatchDisplay");
+    let alarmTime = null;
+    let isBlinking = false;
+    let stopwatchInterval = null;
+    let stopwatchTime = 0;
+    let stopwatchRunning = false;
+
+    // Jam Digital
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      clock.textContent = `${h}:${m}:${s}`;
+
+      if (alarmTime === `${h}:${m}` && s === "00") {
+        triggerAlarm();
+      }
+    }
+
+    function setAlarm() {
+      const input = document.getElementById("alarmTime").value;
+      if (!input) {
+        alert("Masukkan waktu alarm dulu!");
+        return;
+      }
+      alarmTime = input;
+      alert(`Alarm disetel untuk ${alarmTime}`);
+    }
+
+    function clearAlarm() {
+      alarmTime = null;
+      stopAlarm();
+      alert("Alarm dibatalkan");
+    }
+
+    function triggerAlarm() {
+      alarmSound.play();
+      clock.classList.add("blinking");
+      if (!isBlinking) {
+        alert("⏰ Waktu Alarm!");
+        isBlinking = true;
+      }
+    }
+
+    function stopAlarm() {
+      clock.classList.remove("blinking");
+      isBlinking = false;
+      alarmSound.pause();
+      alarmSound.currentTime = 0;
+    }
+
+    setInterval(updateClock, 1000);
+
+    // Stopwatch
+    function toggleStopwatch() {
+      if (stopwatchRunning) {
+        clearInterval(stopwatchInterval);
+        document.getElementById("startStopBtn").textContent = "Mulai";
+      } else {
+        stopwatchInterval = setInterval(updateStopwatch, 1000);
+        document.getElementById("startStopBtn").textContent = "Berhenti";
+      }
+      stopwatchRunning = !stopwatchRunning;
+    }
+
+    function resetStopwatch() {
+      clearInterval(stopwatchInterval);
+      stopwatchTime = 0;
+      stopwatchDisplay.textContent = "00:00";
+      stopwatchRunning = false;
+      document.getElementById("startStopBtn").textContent = "Mulai";
+    }
+
+    function updateStopwatch() {
+      stopwatchTime++;
+      const minutes = String(Math.floor(stopwatchTime / 60)).padStart(2, '0');
+      const seconds = String(stopwatchTime % 60).padStart(2, '0');
+      stopwatchDisplay.textContent = `${minutes}:${seconds}`;
+    }
+  </script>
+</body>
+</html>
